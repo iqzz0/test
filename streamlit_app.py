@@ -118,32 +118,35 @@ if df is not None:
     end_idx = start_idx + items_per_page
     page_df = filtered_df.iloc[start_idx:end_idx]
 
-    cols = st.columns(4)
-    for index, row in page_df.reset_index().iterrows():
-        col_idx = index % 4
-        with cols[col_idx]:
-            img_path = os.path.join('test', str(row['filepath']))
-            
-            # Label & Status Warna
-            pred_text = row['predicted_text']
-            color = COLOR_MAP.get(pred_text, 'gray')
-            
-            # Card UI Container
-            with st.container(border=True):
-                if os.path.exists(img_path):
-                    image = Image.open(img_path)
-                    st.image(image, use_column_width=True)
-                else:
-                    st.warning(f"Gambar tidak ditemukan")
+    # Iterasi per baris (4 item per baris) agar urutan di layar HP (stacked) tetap berurutan
+    for row_idx in range(0, len(page_df), 4):
+        cols = st.columns(4)
+        for col_idx in range(4):
+            if row_idx + col_idx < len(page_df):
+                row = page_df.iloc[row_idx + col_idx]
+                with cols[col_idx]:
+                    img_path = os.path.join('test', str(row['filepath']))
                     
-                st.markdown(f"**ID:** {row['filepath']}")
-                st.markdown(f"**Prediksi:** :{color}[{pred_text}]")
-                st.caption(f"Label Model: {row['label']}")
-                
-                # Fitur tombol salah
-                is_salah = st.session_state.answers[row['filepath']] == 'Salah'
-                is_checked = st.checkbox("Tandai Salah", value=is_salah, key=f"check_{row['filepath']}")
-                st.session_state.answers[row['filepath']] = 'Salah' if is_checked else 'Benar'
+                    # Label & Status Warna
+                    pred_text = row['predicted_text']
+                    color = COLOR_MAP.get(pred_text, 'gray')
+                    
+                    # Card UI Container
+                    with st.container(border=True):
+                        if os.path.exists(img_path):
+                            image = Image.open(img_path)
+                            st.image(image, use_column_width=True)
+                        else:
+                            st.warning(f"Gambar tidak ditemukan")
+                            
+                        st.markdown(f"**ID:** {row['filepath']}")
+                        st.markdown(f"**Prediksi:** :{color}[{pred_text}]")
+                        st.caption(f"Label Model: {row['label']}")
+                        
+                        # Fitur tombol salah
+                        is_salah = st.session_state.answers[row['filepath']] == 'Salah'
+                        is_checked = st.checkbox("Tandai Salah", value=is_salah, key=f"check_{row['filepath']}")
+                        st.session_state.answers[row['filepath']] = 'Salah' if is_checked else 'Benar'
 
 else:
     st.info("Pastikan file 'submission_v2_final.csv' dan folder 'test' berada di direktori yang sama dengan script ini.")
