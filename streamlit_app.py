@@ -36,8 +36,8 @@ def load_data():
             # Buat mapping text
             df['predicted_text'] = df['label'].map(LABEL_MAP).fillna('Unknown')
             # Extract ID numerik untuk sorting
-            df['id_num'] = df['filepath'].apply(lambda x: int(x.split('.')[0]) if str(x).split('.')[0].isdigit() else 0)
-            df = df.sort_values('id_num').reset_index(drop=True)
+            df['id_num'] = df['filepath'].str.extract(r'(\d+)').fillna(0).astype(int)
+            df = df.sort_values('id_num', ascending=True).reset_index(drop=True)
             return df
         else:
             st.error("Kolom 'filepath' atau 'label' tidak ditemukan di CSV.")
