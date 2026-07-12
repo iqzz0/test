@@ -49,6 +49,25 @@ def load_data():
 df = load_data()
 
 if df is not None:
+    if 'answers' not in st.session_state:
+        st.session_state.answers = {row['filepath']: 'Benar' for _, row in df.iterrows()}
+
+    st.sidebar.markdown("### Export Hasil Evaluasi")
+    export_df = df.copy()
+    export_df['Status Jawaban'] = export_df['filepath'].map(st.session_state.answers)
+    
+    import io
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        export_df.to_excel(writer, index=False)
+    
+    st.sidebar.download_button(
+        label="📥 Download Hasil (Excel)",
+        data=output.getvalue(),
+        file_name="hasil_evaluasi.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
     # Filter Kategori
     filter_option = st.radio(
         "Pilih Kategori:",
@@ -82,6 +101,10 @@ if df is not None:
             st.session_state.current_page -= 1
             st.rerun()
     with col2:
+        page_selection = st.number_input("Pilih Halaman", min_value=1, max_value=total_pages, value=st.session_state.current_page, step=1, label_visibility="collapsed")
+        if page_selection != st.session_state.current_page:
+            st.session_state.current_page = page_selection
+            st.rerun()
         st.markdown(f"<div style='text-align: center'>Halaman {st.session_state.current_page} dari {total_pages}</div>", unsafe_allow_html=True)
     with col3:
         if st.button("Selanjutnya ➡️", disabled=(st.session_state.current_page >= total_pages)):
@@ -116,6 +139,11 @@ if df is not None:
                 st.markdown(f"**ID:** {row['filepath']}")
                 st.markdown(f"**Prediksi:** :{color}[{pred_text}]")
                 st.caption(f"Label Model: {row['label']}")
+                
+                # Fitur tombol salah
+                is_salah = st.session_state.answers[row['filepath']] == 'Salah'
+                is_checked = st.checkbox("Tandai Salah", value=is_salah, key=f"check_{row['filepath']}")
+                st.session_state.answers[row['filepath']] = 'Salah' if is_checked else 'Benar'
 
 else:
     st.info("Pastikan file 'submission_v2_final.csv' dan folder 'test' berada di direktori yang sama dengan script ini.")
