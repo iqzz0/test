@@ -109,7 +109,7 @@ if df is not None:
             with st.container(border=True):
                 if os.path.exists(img_path):
                     image = Image.open(img_path)
-                    st.image(image, use_container_width=True)
+                    st.image(image, use_column_width=True)
                 else:
                     st.warning(f"Gambar tidak ditemukan")
                     
